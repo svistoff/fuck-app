@@ -24,6 +24,27 @@ const config = {
   DB_PATH: path.resolve(ROOT, 'data', 'app.db'),
   SHORT_DESC_MAX: 120,
   ASSET_VERSION: '11',   // менять при правке styles.css / app.js — пробивает кэш браузера
+
+  // ── Блог (статьи из контент-завода) ───────────────────────
+  // Поддомен блога. Если запрос пришёл на этот Host — показываем блог. Пусто =
+  // блог живёт только по пути /blog на основном домене (рекомендуется для SEO).
+  BLOG_HOST: (process.env.BLOG_HOST || '').trim().toLowerCase(),
+  // Публичный адрес блога (canonical/sitemap и ссылка в ответе API публикации).
+  BLOG_BASE_URL: (process.env.BLOG_BASE_URL || '').replace(/\/+$/, ''),
+  // Общий секрет для приёма статей из завода. Пусто = приём выключен.
+  BLOG_INGEST_TOKEN: process.env.BLOG_INGEST_TOKEN || '',
 };
+
+// По умолчанию блог — поддиректория /blog основного домена.
+if (!config.BLOG_BASE_URL) config.BLOG_BASE_URL = `${config.BASE_URL}/blog`;
+// Host блога выводим из BLOG_BASE_URL только если это ОТДЕЛЬНЫЙ хост (поддомен);
+// для поддиректории оставляем пустым, иначе Host-роутинг перехватил бы весь сайт.
+if (!config.BLOG_HOST) {
+  try {
+    const blogHost = new URL(config.BLOG_BASE_URL).host.toLowerCase();
+    const mainHost = new URL(config.BASE_URL).host.toLowerCase();
+    if (blogHost !== mainHost) config.BLOG_HOST = blogHost;
+  } catch {}
+}
 
 module.exports = config;

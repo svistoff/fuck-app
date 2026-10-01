@@ -126,3 +126,27 @@ CREATE TABLE IF NOT EXISTS blocked_devices (
   device_id   TEXT PRIMARY KEY,
   created_at  INTEGER DEFAULT (strftime('%s','now'))
 );
+
+-- Статьи блога. Наполняются из контент-завода (content.<домен>) через внутренний
+-- API /internal/blog/publish. Живут в той же БД и отдаются тем же процессом ради
+-- SEO: серверный HTML, единый sitemap и ссылки на каталог анкет.
+CREATE TABLE IF NOT EXISTS blog_posts (
+  id               INTEGER PRIMARY KEY AUTOINCREMENT,
+  slug             TEXT UNIQUE NOT NULL,
+  title            TEXT NOT NULL,            -- SEO title (<title>)
+  h1               TEXT,
+  meta_description TEXT,
+  keywords         TEXT,
+  lead             TEXT,                     -- вступление
+  body_html        TEXT,                     -- готовое тело статьи (HTML)
+  faq_json         TEXT,                     -- [{question, answer}] для FAQ-разметки
+  cover_url        TEXT,
+  source_url       TEXT,                     -- ссылка на исходное видео (rel=nofollow)
+  source_title     TEXT,
+  external_id      TEXT UNIQUE,              -- id Content Pack → идемпотентная публикация
+  status           TEXT NOT NULL DEFAULT 'published' CHECK (status IN ('published','hidden')),
+  created_at       INTEGER DEFAULT (strftime('%s','now')),
+  updated_at       INTEGER DEFAULT (strftime('%s','now'))
+);
+
+CREATE INDEX IF NOT EXISTS idx_blog_status ON blog_posts(status);

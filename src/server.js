@@ -14,6 +14,7 @@ const { CONTACT_ORDER, normalizeValue } = require('./contacts');
 const V = require('./views');
 const A = require('./views_admin');
 const { isDisposable } = require('./disposable');
+const blog = require('./blog');
 
 fs.mkdirSync(config.UPLOAD_DIR, { recursive: true });
 
@@ -212,6 +213,10 @@ app.use('/css', express.static(path.join(config.ROOT, 'public/css')));
 app.use('/js', express.static(path.join(config.ROOT, 'public/js')));
 app.use('/img', express.static(path.join(config.ROOT, 'public/img')));
 app.use('/uploads', express.static(config.UPLOAD_DIR, { maxAge: '365d', immutable: true, index: false }));
+
+// Блог (blog.<домен> и путь /blog) + приём статей из контент-завода.
+// После статики (чтобы /css,/js,/img работали на поддомене блога), до страниц сайта.
+blog.mount(app);
 
 // Device-cookie (мягкий сигнал для блокировки по устройству)
 app.use((req, res, next) => {
@@ -446,9 +451,10 @@ app.post('/profile/delete', auth.requireUser, loadOwnProfile, (req, res) => {
 // ── SEO ──────────────────────────────────────────────────────
 app.get('/robots.txt', (_req, res) => res.type('text/plain').send(`User-agent: *\nAllow: /\nSitemap: ${config.BASE_URL}/sitemap.xml\n`));
 app.get('/sitemap.xml', (_req, res) => {
-  const urls = [`${config.BASE_URL}/`, `${config.BASE_URL}/catalog`];
+  const urls = [`${config.BASE_URL}/`, `${config.BASE_URL}/catalog`, config.BLOG_BASE_URL];
   for (const p of Q.activePinned.all().concat(Q.activeUnpinned.all())) urls.push(`${config.BASE_URL}/profile/${p.id}`);
   for (const pg of Q.publishedPages.all()) urls.push(`${config.BASE_URL}/${pg.slug}`);
+  for (const slug of blog.publishedSlugs()) urls.push(`${config.BLOG_BASE_URL}/${slug}`);
   res.type('application/xml').send(`<?xml version="1.0" encoding="UTF-8"?>\n<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n${urls.map((u) => `  <url><loc>${u}</loc></url>`).join('\n')}\n</urlset>`);
 });
 

@@ -1,0 +1,48 @@
+/* Блог — дополняет styles.css (использует те же CSS-переменные). */
+
+.brand-sub { font-weight: 600; font-size: .75em; color: var(--muted); letter-spacing: 0; }
+
+/* Список статей */
+.blog-list { display: grid; gap: 14px; margin: 18px 0 28px; }
+.blog-card {
+  display: block; background: var(--surface); border: 1px solid var(--line);
+  border-radius: var(--radius); padding: 18px 20px; box-shadow: var(--shadow);
+  transition: border-color .15s ease, transform .05s ease;
+}
+.blog-card:hover { border-color: #d9d9e2; }
+.blog-card h2 { margin: 0 0 .4rem; font-size: 1.15rem; }
+.blog-card p { margin: 0 0 .6rem; color: var(--muted); }
+.blog-card-date { font-size: .8rem; color: var(--muted); }
+
+/* Статья */
+.blog-article { max-width: 720px; margin: 0 auto; }
+.blog-date { font-size: .85rem; color: var(--muted); margin: 0 0 .4rem; }
+.blog-cover { width: 100%; aspect-ratio: 16/9; background-size: cover; background-position: center;
+  border-radius: var(--radius); margin: 14px 0 20px; }
+.blog-lead { font-size: 1.15rem; line-height: 1.6; color: var(--ink); font-weight: 500; margin: 0 0 1.2rem; }
+.blog-body { font-size: 1.05rem; line-height: 1.75; }
+.blog-body h2 { font-size: 1.35rem; margin: 1.8rem 0 .7rem; }
+.blog-body h3 { font-size: 1.12rem; margin: 1.4rem 0 .5rem; }
+.blog-body p { margin: 0 0 1rem; }
+.blog-body ul, .blog-body ol { margin: 0 0 1rem 1.2rem; padding: 0; }
+.blog-body li { margin: .3rem 0; }
+.blog-body a { color: var(--accent-deep); text-decoration: underline; }
+
+/* FAQ */
+.blog-faq { margin: 2rem 0; border-top: 1px solid var(--line); padding-top: 1rem; }
+.blog-faq details { border-bottom: 1px solid var(--line); padding: .7rem 0; }
+.blog-faq summary { cursor: pointer; font-weight: 600; }
+.blog-faq p { margin: .6rem 0 0; color: var(--ink); }
+
+.blog-source { font-size: .85rem; color: var(--muted); margin: 1.5rem 0; }
+.blog-source a { color: var(--muted); text-decoration: underline; }
+.blog-back { margin: 1.5rem 0; }
+.blog-back a { color: var(--accent-deep); font-weight: 600; }
+
+/* Воронка на основной сервис */
+.blog-cta {
+  margin: 2.4rem auto; background: var(--accent-soft); border: 1px solid #f3c5cd;
+  border-radius: var(--radius); padding: 24px; text-align: center;
+}
+.blog-cta h3 { margin: 0 0 .4rem; font-size: 1.3rem; }
+.blog-cta p { margin: 0 0 1rem; color: var(--ink); }
