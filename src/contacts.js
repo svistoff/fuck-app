@@ -31,14 +31,6 @@ const CONTACTS = {
     // По username — публично-безопасный вариант
     buildLink: (v) => (nick(v) ? `https://t.me/${nick(v)}` : null),
   },
-  bip: {
-    label: 'BiP',
-    inputType: 'phone',
-    placeholder: '+7 900 000-00-00',
-    // TODO: подтвердить схему диалога BiP при тесте на устройстве.
-    // Пока безопасный фолбэк — звонок по номеру.
-    buildLink: (v) => (digits(v) ? `tel:+${digits(v)}` : null),
-  },
   max: {
     label: 'MAX',
     inputType: 'username',
@@ -54,7 +46,7 @@ const CONTACTS = {
   },
 };
 
-const CONTACT_ORDER = ['phone', 'whatsapp', 'telegram', 'bip', 'max', 'instagram'];
+const CONTACT_ORDER = ['phone', 'whatsapp', 'telegram', 'max', 'instagram'];
 
 function normalizeValue(type, value) {
   const def = CONTACTS[type];

@@ -23,6 +23,7 @@ const config = {
 
   DB_PATH: path.resolve(ROOT, 'data', 'app.db'),
   SHORT_DESC_MAX: 120,
+  ASSET_VERSION: '11',   // менять при правке styles.css / app.js — пробивает кэш браузера
 };
 
 module.exports = config;
