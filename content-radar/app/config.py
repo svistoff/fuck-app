@@ -38,6 +38,24 @@ class Settings(BaseSettings):
     blog_ingest_url: str = ""         # напр. https://blog.fuck-app.us/internal/blog/publish
     blog_ingest_token: str = ""
 
+    # ── Генерация иллюстраций (fal.ai) ───────────────────────────
+    # Ключ fal.ai (fal.ai -> Settings -> API Keys). Пусто = генерация выключена.
+    fal_key: str = ""
+    # Модель. По умолчанию FLUX.1 [dev] — хорошее качество/цена.
+    # Дешевле: fal-ai/flux/schnell; максимум: fal-ai/flux-pro/v1.1.
+    fal_model: str = "fal-ai/flux/dev"
+    # Пресеты размеров fal: landscape_16_9, portrait_4_5, square_hd и т.п.
+    fal_image_size_article: str = "landscape_16_9"
+    fal_image_size_carousel: str = "portrait_4_5"
+    # Сколько картинок рисовать в статью (обложка + внутри текста) и в карусель.
+    article_image_count: int = 3
+    carousel_image_count: int = 4
+
+    @property
+    def blog_media_url(self) -> str:
+        """Эндпойнт загрузки картинок на сайт — выводится из blog_ingest_url."""
+        return self.blog_ingest_url.rsplit("/", 1)[0] + "/media" if self.blog_ingest_url else ""
+
     scheduler_enabled: bool = True
     search_interval_hours: int = 12
     metrics_interval_hours: int = 6

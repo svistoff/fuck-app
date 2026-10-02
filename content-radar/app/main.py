@@ -381,6 +381,23 @@ def publish_to_blog(pack_id: uuid.UUID, db: Session = Depends(get_db)):
     )
 
 
+@app.post("/content/{pack_id}/generate-images")
+def generate_images(pack_id: uuid.UUID, db: Session = Depends(get_db)):
+    from app.services.image_service import ImageGenError, generate_images_for_pack
+
+    pack = db.get(ContentPack, pack_id)
+    if not pack:
+        raise HTTPException(status_code=404, detail="Материал не найден")
+    try:
+        result = generate_images_for_pack(db, pack)
+    except ImageGenError as exc:
+        return RedirectResponse(f"/content/{pack_id}?error={quote(str(exc))}", status_code=303)
+    msg = f"Иллюстрации готовы: статья {result['article']}, карусель {result['carousel']}"
+    if result["errors"]:
+        msg += f"; не удалось {len(result['errors'])} (часть промптов мог отклонить фильтр)"
+    return RedirectResponse(f"/content/{pack_id}?ok={quote(msg)}", status_code=303)
+
+
 @app.post("/videos/cleanup")
 def cleanup_videos(db: Session = Depends(get_db)):
     removed = cleanup_ineligible_videos(db)

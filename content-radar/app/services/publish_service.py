@@ -83,14 +83,34 @@ def build_article_payload(pack: ContentPack, video: Video) -> dict:
     lead = intro_paras[0].strip() if intro_paras else ""
     rest_intro = "\n\n".join(intro_paras[1:]).strip() if len(intro_paras) > 1 else ""
 
+    # Сгенерированные иллюстрации (если есть): обложка = hero, остальные — в текст.
+    gen = (content.get("generated_images") or {}).get("article") or []
+    cover_url = (article.get("cover_url") or "").strip()
+    inline_imgs: list[dict] = []
+    if gen:
+        hero = next((i for i in gen if "hero" in (i.get("placement") or "").lower()), gen[0])
+        if not cover_url:
+            cover_url = hero.get("url", "")
+        inline_imgs = [i for i in gen if i is not hero]
+
+    def _figure(im: dict) -> str:
+        u = (im.get("url") or "").strip()
+        return f'<figure class="blog-figure"><img src="{html.escape(u)}" alt="" loading="lazy"></figure>' if u else ""
+
     body_parts: list[str] = []
     if rest_intro:
         body_parts.append(_md_block_to_html(rest_intro))
-    for section in article.get("sections") or []:
+    sections = article.get("sections") or []
+    for idx, section in enumerate(sections):
         heading = (section.get("h2") or "").strip()
         if heading:
             body_parts.append(f"<h2>{_inline(heading)}</h2>")
         body_parts.append(_md_block_to_html(section.get("body_markdown") or ""))
+        # картинку вставляем после чётных разделов (1-го, 3-го…), чтобы разнести
+        if inline_imgs and idx % 2 == 0:
+            body_parts.append(_figure(inline_imgs.pop(0)))
+    for im in inline_imgs:  # если разделов мало — остаток в конец
+        body_parts.append(_figure(im))
     conclusion = (article.get("conclusion") or "").strip()
     if conclusion:
         body_parts.append("<h2>Вывод</h2>")
@@ -113,6 +133,7 @@ def build_article_payload(pack: ContentPack, video: Video) -> dict:
         "meta_description": (article.get("seo_description") or "").strip(),
         "lead": lead,
         "body_html": "".join(p for p in body_parts if p),
+        "cover_url": cover_url,
         "faq": faq,
         "source_url": video.url,
         "source_title": video.title,

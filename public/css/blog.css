@@ -46,3 +46,7 @@
 }
 .blog-cta h3 { margin: 0 0 .4rem; font-size: 1.3rem; }
 .blog-cta p { margin: 0 0 1rem; color: var(--ink); }
+
+/* Иллюстрации внутри статьи */
+.blog-body .blog-figure { margin: 1.6rem 0; }
+.blog-body .blog-figure img { width: 100%; border-radius: var(--radius); }

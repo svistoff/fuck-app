@@ -10,10 +10,24 @@
   {% if a %}<form method="post" action="/content/{{ pack.id }}/publish-to-blog" onsubmit="this.querySelector('button').disabled=true;this.querySelector('button').textContent='Публикую…'">
     <button class="btn-good" type="submit">{{ 'Обновить в блоге' if pack.blog_url else 'Опубликовать в блог' }}</button>
   </form>{% endif %}
+  {% if content.illustration_prompts %}<form method="post" action="/content/{{ pack.id }}/generate-images" onsubmit="this.querySelector('button').disabled=true;this.querySelector('button').textContent='Генерирую… (до минуты)'">
+    <button class="secondary" type="submit">{{ 'Перегенерировать картинки' if content.generated_images else 'Сгенерировать иллюстрации' }}</button>
+  </form>{% endif %}
   <form method="post" action="/videos/{{ video.id }}/produce"><button class="secondary">Пересоздать материал</button></form>
   <a class="btn-good" href="/content">← Ко всем материалам</a>
 </section>
 {% if pack.blog_url %}<p class="kv"><b>Опубликовано в блоге:</b> <a href="{{ pack.blog_url }}" target="_blank" rel="noopener">{{ pack.blog_url }}</a>{% if pack.blog_published_at %} · {{ pack.blog_published_at.strftime('%d.%m.%Y %H:%M') }}{% endif %}</p>{% endif %}
+
+{% if content.generated_images %}{% set gi = content.generated_images %}
+<section class="panel"><h2>Сгенерированные иллюстрации</h2>
+<p class="hint">Стиль берётся из «Настройки → Стиль иллюстраций». Не нравится — поменяй стиль/промт и нажми «Перегенерировать картинки». Обложка статьи = картинка с пометкой hero (или первая).</p>
+{% if gi.article %}<h3>В статью ({{ gi.article|length }})</h3><div class="img-grid">
+{% for im in gi.article %}<figure class="img-card"><a href="{{ im.url }}" target="_blank"><img src="{{ im.url }}" loading="lazy" alt=""></a><figcaption><b>{{ im.placement or '—' }}</b><br>{{ im.prompt[:140] }}<br><a href="{{ im.url }}" download>скачать</a></figcaption></figure>{% endfor %}
+</div>{% endif %}
+{% if gi.carousel %}<h3>Для Instagram-карусели ({{ gi.carousel|length }})</h3><p class="hint">Эти картинки не публикуются на сайт — скачай и выложи в Инсту вручную.</p><div class="img-grid">
+{% for im in gi.carousel %}<figure class="img-card"><a href="{{ im.url }}" target="_blank"><img src="{{ im.url }}" loading="lazy" alt=""></a><figcaption>{{ im.prompt[:140] }}<br><a href="{{ im.url }}" download>скачать</a></figcaption></figure>{% endfor %}
+</div>{% endif %}
+</section>{% endif %}
 
 {% if a %}<section class="panel"><h2>Статья</h2>{% if a.seo_title %}<p class="kv"><b>SEO title:</b> {{ a.seo_title }}</p>{% endif %}{% if a.seo_description %}<p class="kv"><b>SEO description:</b> {{ a.seo_description }}</p>{% endif %}{% if a.slug_suggestion %}<p class="kv"><b>Slug:</b> {{ a.slug_suggestion }}</p>{% endif %}{% if a.intro %}<p>{{ a.intro }}</p>{% endif %}{% for s in a.sections or [] %}<h3>{{ s.h2 }}</h3><p class="pre">{{ s.body_markdown }}</p>{% endfor %}{% if a.faq %}<h3>FAQ</h3>{% for q in a.faq %}<p class="kv"><b>{{ q.question }}</b><br>{{ q.answer }}</p>{% endfor %}{% endif %}{% if a.conclusion %}<h3>Вывод</h3><p>{{ a.conclusion }}</p>{% endif %}{% if a.editorial_disclaimer %}<p class="hint">{{ a.editorial_disclaimer }}</p>{% endif %}</section>{% endif %}
 

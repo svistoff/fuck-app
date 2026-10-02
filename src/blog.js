@@ -7,10 +7,17 @@
 // ссылается на каталог анкет — это и есть рост органики и ссылочной массы для
 // основного сервиса.
 
+const fs = require('fs');
+const path = require('path');
+const crypto = require('crypto');
 const express = require('express');
 const config = require('./config');
 const { db } = require('./db');
 const { esc } = require('./views');
+
+// Папка для картинок блога (обложки/иллюстрации из контент-завода).
+const BLOG_MEDIA_DIR = path.join(config.UPLOAD_DIR, 'blog');
+fs.mkdirSync(BLOG_MEDIA_DIR, { recursive: true });
 
 // ── Запросы к БД ─────────────────────────────────────────────
 const Q = {
@@ -259,6 +266,27 @@ function mount(app) {
     try {
       const result = ingest(req.body || {});
       res.json({ ok: true, slug: result.slug, updated: result.updated, url: `${config.BLOG_BASE_URL}/${result.slug}` });
+    } catch (e) {
+      res.status(400).json({ error: String(e.message || e) });
+    }
+  });
+
+  // 1b. Приём картинок из завода (обложки/иллюстрации). Защищён тем же токеном.
+  //     Тело: { ext, data_base64 }. Сохраняет в uploads/blog, отдаёт публичный URL.
+  app.post('/internal/blog/media', express.json({ limit: '30mb' }), (req, res) => {
+    if (!config.BLOG_INGEST_TOKEN) return res.status(503).json({ error: 'Приём выключен (BLOG_INGEST_TOKEN не задан)' });
+    const token = (req.get('authorization') || '').replace(/^Bearer\s+/i, '');
+    if (token !== config.BLOG_INGEST_TOKEN) return res.status(401).json({ error: 'Неверный токен' });
+    try {
+      const ext = String(req.body.ext || 'png').toLowerCase().replace(/[^a-z0-9]/g, '');
+      if (!['png', 'jpg', 'jpeg', 'webp'].includes(ext)) return res.status(400).json({ error: 'Недопустимый формат' });
+      const data = String(req.body.data_base64 || '');
+      if (!data) return res.status(400).json({ error: 'Пустые данные' });
+      const buf = Buffer.from(data, 'base64');
+      if (!buf.length || buf.length > 25 * 1024 * 1024) return res.status(400).json({ error: 'Размер вне допустимого' });
+      const name = `${Date.now()}_${crypto.randomBytes(5).toString('hex')}.${ext}`;
+      fs.writeFileSync(path.join(BLOG_MEDIA_DIR, name), buf);
+      res.json({ ok: true, url: `${config.BASE_URL}/uploads/blog/${name}` });
     } catch (e) {
       res.status(400).json({ error: String(e.message || e) });
     }

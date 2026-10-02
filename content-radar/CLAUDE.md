@@ -13,11 +13,13 @@
 
 ## Деплой
 
-**Основной сервер (с 28.09.2026): `45.146.90.128`.** Проект живёт в
-`/root/18plus-content-radar`, деплой — `git pull` + пересборка контейнера.
-Дашборд открывается по `http://45.146.90.128:<WEB_PORT>` (порт из `.env`,
-по умолчанию 8095; проверить свободный через `ss -tlnp`).
-(Прежний сервер `77.110.125.73` больше не основной.)
+**Основной сервер (с 28.09.2026): `45.146.90.128`.** С 10.2026 завод —
+часть монорепо сайта и живёт в **`/var/www/fuck-app/content-radar`** (одна копия
+кода на GitHub и в работе). Деплой — `git pull` в `/var/www/fuck-app` +
+пересборка контейнера из подпапки. Дашборд — `https://content.fuck-app.us`
+(внутри порт из `.env`, по умолчанию 8095). `.env` лежит рядом в
+`/var/www/fuck-app/content-radar/.env` (не коммитится).
+(Прежняя папка `/root/18plus-content-radar` выведена из эксплуатации.)
 
 `18plus-content-radar` разворачивается через **Docker Compose** (см.
 `docker-compose.yml`) из-за зависимости от PostgreSQL — не смешивать со
@@ -26,8 +28,8 @@ Supervisor-конфигами других проектов.
 Основные команды (после изменения кода/`.env`):
 
 ```bash
-cd /root/18plus-content-radar
-git pull
+cd /var/www/fuck-app && git pull
+cd /var/www/fuck-app/content-radar
 docker compose up -d --build --force-recreate web
 docker compose logs -f web
 ```
