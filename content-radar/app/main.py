@@ -57,6 +57,7 @@ _POSTGRES_COLUMN_PATCHES = (
     "ALTER TABLE videos ADD COLUMN IF NOT EXISTS source_type VARCHAR(20) DEFAULT 'topic_search'",
     "ALTER TABLE content_packs ADD COLUMN IF NOT EXISTS blog_url TEXT",
     "ALTER TABLE content_packs ADD COLUMN IF NOT EXISTS blog_published_at TIMESTAMPTZ",
+    "ALTER TABLE brand_settings ADD COLUMN IF NOT EXISTS tts_voice VARCHAR(40) DEFAULT 'nova'",
 )
 
 # SQLite не поддерживает IF NOT EXISTS в ADD COLUMN — пытаемся добавить и глотаем
@@ -64,6 +65,7 @@ _POSTGRES_COLUMN_PATCHES = (
 _SQLITE_COLUMN_PATCHES = (
     "ALTER TABLE content_packs ADD COLUMN blog_url TEXT",
     "ALTER TABLE content_packs ADD COLUMN blog_published_at TIMESTAMP",
+    "ALTER TABLE brand_settings ADD COLUMN tts_voice VARCHAR(40) DEFAULT 'nova'",
 )
 
 
@@ -436,6 +438,7 @@ def save_settings(
     blog_cta: str = Form(""),
     image_style: str = Form(""),
     custom_instructions: str = Form(""),
+    tts_voice: str = Form("nova"),
     db: Session = Depends(get_db),
 ):
     brand = get_brand_settings(db)
@@ -444,6 +447,8 @@ def save_settings(
     brand.blog_cta = blog_cta.strip()
     brand.image_style = image_style.strip()
     brand.custom_instructions = custom_instructions.strip()
+    allowed_voices = {"alloy", "ash", "ballad", "coral", "echo", "fable", "nova", "onyx", "sage", "shimmer", "verse"}
+    brand.tts_voice = tts_voice if tts_voice in allowed_voices else "nova"
     db.commit()
     return RedirectResponse(f"/settings?ok={quote('Настройки сохранены')}", status_code=303)
 

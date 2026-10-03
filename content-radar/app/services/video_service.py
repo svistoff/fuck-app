@@ -20,13 +20,14 @@ from sqlalchemy.orm import Session
 
 from app.config import get_settings
 from app.models import ContentPack
+from app.services.settings_service import get_brand_settings
 
 
 class ReelsError(RuntimeError):
     """Reels-видео не удалось собрать."""
 
 
-def _tts(text: str, settings) -> bytes:
+def _tts(text: str, voice: str, settings) -> bytes:
     key, base = settings.tts_credentials()
     if not key:
         raise ReelsError("Не задан ключ для озвучки (AI_API_KEY или TTS_API_KEY).")
@@ -34,7 +35,7 @@ def _tts(text: str, settings) -> bytes:
     resp = httpx.post(
         url,
         headers={"Authorization": f"Bearer {key}"},
-        json={"model": settings.tts_model, "voice": settings.tts_voice,
+        json={"model": settings.tts_model, "voice": voice,
               "input": text[:4000], "response_format": "mp3"},
         timeout=120.0,
     )
@@ -148,10 +149,12 @@ def build_reels_video(db: Session, pack: ContentPack, reel_index: int = 0) -> st
     if not image_urls:
         raise ReelsError("Сначала сгенерируйте иллюстрации — из них собирается видео.")
 
+    voice = (get_brand_settings(db).tts_voice or settings.tts_voice or "nova").strip()
+
     with tempfile.TemporaryDirectory() as td:
         audio = os.path.join(td, "voice.mp3")
         with open(audio, "wb") as f:
-            f.write(_tts(narration, settings))
+            f.write(_tts(narration, voice, settings))
         duration = _probe_duration(audio) or float(reel.get("duration_seconds") or 30)
 
         local_imgs = []

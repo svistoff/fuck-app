@@ -93,6 +93,7 @@ class BrandSettings(Base):
     blog_cta: Mapped[str] = mapped_column(Text, default="")
     image_style: Mapped[str] = mapped_column(Text, default="")
     custom_instructions: Mapped[str] = mapped_column(Text, default="")
+    tts_voice: Mapped[str] = mapped_column(String(40), default="nova")  # голос озвучки Reels
     updated_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True), server_default=func.now(), onupdate=func.now()
     )
