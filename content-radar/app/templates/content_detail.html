@@ -13,9 +13,20 @@
   {% if content.illustration_prompts %}<form method="post" action="/content/{{ pack.id }}/generate-images" onsubmit="this.querySelector('button').disabled=true;this.querySelector('button').textContent='Генерирую… (до минуты)'">
     <button class="secondary" type="submit">{{ 'Перегенерировать картинки' if content.generated_images else 'Сгенерировать иллюстрации' }}</button>
   </form>{% endif %}
+  {% if content.reels %}<form method="post" action="/content/{{ pack.id }}/build-reels" onsubmit="this.querySelector('button').disabled=true;this.querySelector('button').textContent='Собираю видео… (до 1-2 мин)'">
+    <input type="hidden" name="reel_index" value="0">
+    <button class="secondary" type="submit">{{ 'Пересобрать Reels' if content.reels_video else 'Собрать Reels (видео)' }}</button>
+  </form>{% endif %}
   <form method="post" action="/videos/{{ video.id }}/produce"><button class="secondary">Пересоздать материал</button></form>
   <a class="btn-good" href="/content">← Ко всем материалам</a>
 </section>
+{% if content.reels_video %}<section class="panel"><h2>Reels-видео</h2>
+<p class="hint">Вертикальное слайд-шоу из иллюстраций с озвучкой и субтитрами. Скачай и выложи в Reels/Shorts вручную. Пересобирается кнопкой «Пересобрать Reels» (например, после перегенерации картинок).</p>
+<video src="{{ content.reels_video.url }}" controls preload="metadata" style="max-width:280px;border-radius:12px"></video>
+<p class="kv"><a href="{{ content.reels_video.url }}" download>скачать видео</a></p>
+{% if content.reels_video.caption %}<p class="kv"><b>Подпись:</b> {{ content.reels_video.caption }}</p>{% endif %}
+{% if content.reels_video.cta %}<p class="kv"><b>CTA:</b> {{ content.reels_video.cta }}</p>{% endif %}
+</section>{% endif %}
 {% if pack.blog_url %}<p class="kv"><b>Опубликовано в блоге:</b> <a href="{{ pack.blog_url }}" target="_blank" rel="noopener">{{ pack.blog_url }}</a>{% if pack.blog_published_at %} · {{ pack.blog_published_at.strftime('%d.%m.%Y %H:%M') }}{% endif %}</p>{% endif %}
 
 {% if content.generated_images %}{% set gi = content.generated_images %}

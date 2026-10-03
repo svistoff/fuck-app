@@ -398,6 +398,20 @@ def generate_images(pack_id: uuid.UUID, db: Session = Depends(get_db)):
     return RedirectResponse(f"/content/{pack_id}?ok={quote(msg)}", status_code=303)
 
 
+@app.post("/content/{pack_id}/build-reels")
+def build_reels(pack_id: uuid.UUID, reel_index: int = Form(0), db: Session = Depends(get_db)):
+    from app.services.video_service import ReelsError, build_reels_video
+
+    pack = db.get(ContentPack, pack_id)
+    if not pack:
+        raise HTTPException(status_code=404, detail="Материал не найден")
+    try:
+        url = build_reels_video(db, pack, reel_index)
+    except ReelsError as exc:
+        return RedirectResponse(f"/content/{pack_id}?error={quote(str(exc))}", status_code=303)
+    return RedirectResponse(f"/content/{pack_id}?ok={quote('Reels-видео собрано: ' + url)}", status_code=303)
+
+
 @app.post("/videos/cleanup")
 def cleanup_videos(db: Session = Depends(get_db)):
     removed = cleanup_ineligible_videos(db)

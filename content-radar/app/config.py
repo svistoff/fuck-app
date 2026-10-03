@@ -51,6 +51,21 @@ class Settings(BaseSettings):
     article_image_count: int = 3
     carousel_image_count: int = 4
 
+    # ── Сборка Reels (слайд-шоу: кадры + озвучка + субтитры) ─────
+    # Озвучка — OpenAI-совместимый TTS (по умолчанию тем же ai_api_key/ai_base_url).
+    tts_api_key: str = ""         # пусто = использовать ai_api_key
+    tts_base_url: str = ""        # пусто = использовать ai_base_url (или OpenAI)
+    tts_model: str = "gpt-4o-mini-tts"
+    tts_voice: str = "nova"
+    # Вертикальное видео 1080x1920 (Reels/Shorts), fps.
+    video_width: int = 1080
+    video_height: int = 1920
+    video_fps: int = 30
+
+    def tts_credentials(self) -> tuple[str, str]:
+        """Ключ и base_url для TTS: отдельные, иначе общие AI."""
+        return (self.tts_api_key or self.ai_api_key, self.tts_base_url or self.ai_base_url)
+
     @property
     def blog_media_url(self) -> str:
         """Эндпойнт загрузки картинок на сайт — выводится из blog_ingest_url."""
