@@ -218,12 +218,17 @@ def _transcribe_with_whisper(video_id: str) -> tuple[list[dict], str | None]:
             client_kwargs["base_url"] = base_url
         client = OpenAI(**client_kwargs)
 
+        # Сегменты с таймкодами (verbose_json) отдают только модели семейства
+        # Whisper (whisper-1, Groq whisper-large-v3*). Новые gpt-*-transcribe
+        # возвращают только текст и на verbose_json отвечают ошибкой.
+        model = settings.whisper_model
+        response_format = "verbose_json" if "whisper" in model.lower() else "json"
         try:
             with open(audio_path, "rb") as fh:
                 result = client.audio.transcriptions.create(
-                    model=settings.whisper_model,
+                    model=model,
                     file=fh,
-                    response_format="verbose_json",
+                    response_format=response_format,
                 )
         except Exception as exc:
             raise TranscriptUnavailable(f"ошибка Whisper: {str(exc)[:160]}") from exc
