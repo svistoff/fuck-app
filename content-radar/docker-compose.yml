@@ -1,6 +1,7 @@
 services:
   web:
     build: .
+    restart: unless-stopped
     env_file: .env
     ports:
       - "${WEB_PORT:-8000}:8000"
@@ -12,6 +13,7 @@ services:
     command: uvicorn app.main:app --host 0.0.0.0 --port 8000 --reload
   postgres:
     image: postgres:16-alpine
+    restart: unless-stopped
     environment:
       POSTGRES_DB: radar
       POSTGRES_USER: radar

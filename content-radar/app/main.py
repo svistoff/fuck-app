@@ -40,6 +40,8 @@ from app.services.transcript_service import TranscriptUnavailable, fetch_and_sto
 from app.services.youtube_client import YouTubeAPIError
 
 logging.getLogger("radar").setLevel(logging.INFO)
+# httpx на INFO пишет в лог полный URL запроса, включая ?key=... (YouTube API).
+logging.getLogger("httpx").setLevel(logging.WARNING)
 if not logging.getLogger().handlers:
     logging.basicConfig(level=logging.INFO)
 
