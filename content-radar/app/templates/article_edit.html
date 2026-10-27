@@ -1,0 +1,74 @@
+{% extends "base.html" %}{% block content %}
+{% if ok_message %}<p class="ok" style="background:#e8f8ee;border:1px solid #bfe6cc;padding:8px 12px;border-radius:8px">{{ ok_message }}</p>{% endif %}
+{% if error_message %}<p class="error" style="background:#fdecea;border:1px solid #f3c5cd;color:#c0392b;padding:8px 12px;border-radius:8px">{{ error_message }}</p>{% endif %}
+<h1>Редактирование статьи</h1>
+<p class="hint">По видео: <a href="{{ video.url }}" target="_blank" rel="noopener">{{ video.title }}</a>{% if pack.blog_url %} · в блоге: <a href="{{ pack.blog_url }}" target="_blank" rel="noopener">{{ pack.blog_url }}</a>{% endif %}</p>
+
+<section class="panel toolbar">
+  <a class="btn-good" href="/content/{{ pack.id }}">← К материалу</a>
+  <form method="post" action="/content/{{ pack.id }}/publish-to-blog" onsubmit="this.querySelector('button').disabled=true;this.querySelector('button').textContent='Публикую…'">
+    <button class="btn-good" type="submit">{{ 'Обновить в блоге' if pack.blog_url else 'Опубликовать в блог' }}</button>
+  </form>
+  {% if has_prev %}<form method="post" action="/content/{{ pack.id }}/restore" onsubmit="return confirm('Вернуть предыдущую версию статьи? Текущая станет «предыдущей», так что это тоже можно отменить.')">
+    <button class="secondary" type="submit">Вернуть предыдущую версию</button>
+  </form>{% endif %}
+</section>
+
+<section class="panel"><h2>Поправить через ИИ</h2>
+<p class="hint">Напиши, что изменить, — ИИ перепишет статью по твоему указанию, остальное оставит как есть. Учитывает «Настройки» (тон, аудитория, CTA), факты берёт из транскрипта видео. Занимает до 1–2 минут. Если результат не понравится — «Вернуть предыдущую версию».</p>
+<form method="post" action="/content/{{ pack.id }}/revise" class="stack" onsubmit="this.querySelector('button').disabled=true;this.querySelector('button').textContent='ИИ правит статью… (до 1–2 мин)'">
+  <textarea name="instruction" rows="3" required placeholder="Например: сделай вступление короче и живее; добавь раздел про первое свидание; убери повторы в FAQ; заголовок H1 — провокационнее"></textarea>
+  <button type="submit">Поправить через ИИ</button>
+</form>
+</section>
+
+<section class="panel"><h2>Редактировать вручную</h2>
+<form method="post" action="/content/{{ pack.id }}/edit" class="stack">
+  <label>SEO title — заголовок во вкладке и в поиске (до 60 знаков)<input name="seo_title" value="{{ a.seo_title or '' }}" maxlength="150"></label>
+  <label>SEO description — описание в поиске (до 160 знаков)<textarea name="seo_description" rows="2">{{ a.seo_description or '' }}</textarea></label>
+  <label>Заголовок H1<input name="h1" value="{{ a.h1 or '' }}" maxlength="200"></label>
+  <label>Адрес статьи (slug, латиница через дефис). У уже опубликованной статьи адрес на сайте не меняется.<input name="slug_suggestion" value="{{ a.slug_suggestion or '' }}" maxlength="120"></label>
+  <label>Вступление (первый абзац станет лидом)<textarea name="intro" rows="5">{{ a.intro or '' }}</textarea></label>
+
+  <h3>Разделы</h3>
+  <p class="hint">Удалить раздел — очисти оба его поля. Пустые слоты внизу — для новых разделов. В тексте: пустая строка — новый абзац, строки с «- » — список, **жирный**.</p>
+  {% set secs = a.sections or [] %}
+  {% for s in secs %}
+  <fieldset style="border:1px solid #e2e6f0;border-radius:12px;padding:12px;display:flex;flex-direction:column;gap:8px">
+    <legend>Раздел {{ loop.index }}</legend>
+    <input name="section_h2_{{ loop.index0 }}" value="{{ s.h2 or '' }}" placeholder="Подзаголовок H2">
+    <textarea name="section_body_{{ loop.index0 }}" rows="8">{{ s.body_markdown or '' }}</textarea>
+  </fieldset>
+  {% endfor %}
+  {% for i in range(2) %}
+  <fieldset style="border:1px dashed #cdd3e4;border-radius:12px;padding:12px;display:flex;flex-direction:column;gap:8px">
+    <legend>Новый раздел (необязательно)</legend>
+    <input name="section_h2_{{ secs|length + i }}" value="" placeholder="Подзаголовок H2">
+    <textarea name="section_body_{{ secs|length + i }}" rows="4" placeholder="Текст раздела"></textarea>
+  </fieldset>
+  {% endfor %}
+
+  <h3>Частые вопросы (FAQ)</h3>
+  <p class="hint">Вопрос без ответа не сохраняется. Удалить — очисти оба поля.</p>
+  {% set faq = a.faq or [] %}
+  {% for q in faq %}
+  <fieldset style="border:1px solid #e2e6f0;border-radius:12px;padding:12px;display:flex;flex-direction:column;gap:8px">
+    <legend>Вопрос {{ loop.index }}</legend>
+    <input name="faq_q_{{ loop.index0 }}" value="{{ q.question or '' }}" placeholder="Вопрос">
+    <textarea name="faq_a_{{ loop.index0 }}" rows="3" placeholder="Ответ">{{ q.answer or '' }}</textarea>
+  </fieldset>
+  {% endfor %}
+  {% for i in range(2) %}
+  <fieldset style="border:1px dashed #cdd3e4;border-radius:12px;padding:12px;display:flex;flex-direction:column;gap:8px">
+    <legend>Новый вопрос (необязательно)</legend>
+    <input name="faq_q_{{ faq|length + i }}" value="" placeholder="Вопрос">
+    <textarea name="faq_a_{{ faq|length + i }}" rows="2" placeholder="Ответ"></textarea>
+  </fieldset>
+  {% endfor %}
+
+  <label>Вывод<textarea name="conclusion" rows="4">{{ a.conclusion or '' }}</textarea></label>
+  <label>Дисклеймер (мелким шрифтом в конце)<textarea name="editorial_disclaimer" rows="2">{{ a.editorial_disclaimer or '' }}</textarea></label>
+  <button type="submit">Сохранить статью</button>
+</form>
+</section>
+{% endblock %}

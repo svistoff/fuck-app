@@ -416,6 +416,82 @@ def build_reels(pack_id: uuid.UUID, reel_index: int = Form(0), db: Session = Dep
     return RedirectResponse(f"/content/{pack_id}?ok={quote('Reels-видео собрано: ' + url)}", status_code=303)
 
 
+# ── Редактирование статьи: вручную, через ИИ, откат ─────────────────────────
+PUBLISHED_HINT = " Статья уже в блоге — нажмите «Обновить в блоге», чтобы правки попали на сайт."
+
+
+def _edit_redirect(pack: ContentPack, ok: str = "", error: str = "") -> RedirectResponse:
+    if ok and pack.blog_url:
+        ok += PUBLISHED_HINT
+    query = f"ok={quote(ok)}" if ok else f"error={quote(error)}"
+    return RedirectResponse(f"/content/{pack.id}/edit?{query}", status_code=303)
+
+
+@app.get("/content/{pack_id}/edit", response_class=HTMLResponse)
+def edit_article_page(pack_id: uuid.UUID, request: Request, db: Session = Depends(get_db)):
+    pack = db.get(ContentPack, pack_id)
+    if not pack:
+        raise HTTPException(status_code=404, detail="Материал не найден")
+    content = json.loads(pack.content_json or "{}")
+    if not isinstance(content.get("blog_article"), dict):
+        return RedirectResponse(f"/content/{pack_id}?error={quote('В материале нет статьи')}", status_code=303)
+    return templates.TemplateResponse(
+        request,
+        "article_edit.html",
+        {
+            "pack": pack,
+            "video": pack.video,
+            "a": content["blog_article"],
+            "has_prev": isinstance(content.get("blog_article_prev"), dict),
+            "ok_message": request.query_params.get("ok"),
+            "error_message": request.query_params.get("error"),
+        },
+    )
+
+
+@app.post("/content/{pack_id}/edit")
+async def edit_article_save(pack_id: uuid.UUID, request: Request, db: Session = Depends(get_db)):
+    from app.services.article_edit_service import ArticleEditError, article_from_form, save_manual
+
+    pack = db.get(ContentPack, pack_id)
+    if not pack:
+        raise HTTPException(status_code=404, detail="Материал не найден")
+    form = await request.form()
+    try:
+        save_manual(db, pack, article_from_form(form))
+    except ArticleEditError as exc:
+        return _edit_redirect(pack, error=str(exc))
+    return _edit_redirect(pack, ok="Статья сохранена.")
+
+
+@app.post("/content/{pack_id}/revise")
+def revise_article(pack_id: uuid.UUID, instruction: str = Form(""), db: Session = Depends(get_db)):
+    from app.services.article_edit_service import ArticleEditError, revise_with_ai
+
+    pack = db.get(ContentPack, pack_id)
+    if not pack:
+        raise HTTPException(status_code=404, detail="Материал не найден")
+    try:
+        revise_with_ai(db, pack, instruction)
+    except ArticleEditError as exc:
+        return _edit_redirect(pack, error=str(exc))
+    return _edit_redirect(pack, ok="ИИ внёс правки. Не понравилось — «Вернуть предыдущую версию».")
+
+
+@app.post("/content/{pack_id}/restore")
+def restore_article(pack_id: uuid.UUID, db: Session = Depends(get_db)):
+    from app.services.article_edit_service import ArticleEditError, restore_previous
+
+    pack = db.get(ContentPack, pack_id)
+    if not pack:
+        raise HTTPException(status_code=404, detail="Материал не найден")
+    try:
+        restore_previous(db, pack)
+    except ArticleEditError as exc:
+        return _edit_redirect(pack, error=str(exc))
+    return _edit_redirect(pack, ok="Возвращена предыдущая версия.")
+
+
 @app.post("/videos/cleanup")
 def cleanup_videos(db: Session = Depends(get_db)):
     removed = cleanup_ineligible_videos(db)
