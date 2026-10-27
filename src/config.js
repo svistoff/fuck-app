@@ -33,6 +33,13 @@ const config = {
   BLOG_BASE_URL: (process.env.BLOG_BASE_URL || '').replace(/\/+$/, ''),
   // Общий секрет для приёма статей из завода. Пусто = приём выключен.
   BLOG_INGEST_TOKEN: process.env.BLOG_INGEST_TOKEN || '',
+
+  // ── Уведомления о поломках (Telegram) ─────────────────────
+  // Бот от @BotFather и id чата, куда слать. Пусто = уведомления выключены.
+  ALERT_TG_TOKEN: process.env.ALERT_TG_TOKEN || '',
+  ALERT_TG_CHAT: process.env.ALERT_TG_CHAT || '',
+  // Доп. адреса для проверки здоровья через запятую (сайт и блог проверяются всегда).
+  HEALTH_EXTRA_URLS: (process.env.HEALTH_EXTRA_URLS || '').split(',').map((s) => s.trim()).filter(Boolean),
 };
 
 // По умолчанию блог — поддиректория /blog основного домена.

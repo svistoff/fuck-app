@@ -15,6 +15,7 @@ const V = require('./views');
 const A = require('./views_admin');
 const { isDisposable } = require('./disposable');
 const blog = require('./blog');
+const { alert } = require('./alert');
 
 fs.mkdirSync(config.UPLOAD_DIR, { recursive: true });
 
@@ -322,7 +323,11 @@ app.post('/auth', async (req, res) => {
   const token = auth.createLoginToken(email);
   const link = `${config.BASE_URL}/auth/verify?token=${encodeURIComponent(token)}&next=${encodeURIComponent(req.body.next || '/')}`;
   try { await mailer.sendMagicLink(email, link); }
-  catch (e) { console.error('mail error', e); return res.send(V.authEnterPage({ next: req.body.next, error: 'Не удалось отправить письмо. Попробуйте позже.' })); }
+  catch (e) {
+    console.error('mail error', e);
+    alert('mail', `🔴 Не отправилось письмо для входа (${email}). Регистрация и вход не работают.\n${String(e.message || e).slice(0, 300)}`);
+    return res.send(V.authEnterPage({ next: req.body.next, error: 'Не удалось отправить письмо. Попробуйте позже.' }));
+  }
   res.send(V.authSentPage(email));
 });
 app.get('/auth/verify', (req, res) => {

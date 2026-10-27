@@ -7,3 +7,4 @@ uploads/*
 !uploads/.keep
 *.log
 .DS_Store
+data/healthcheck-state.json
